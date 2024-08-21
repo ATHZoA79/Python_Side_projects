@@ -1,0 +1,4 @@
+**Right click on the main.py file and open it as python script**
+
+## Current Issue
+executable file will crash if extracting rar file, due to the missing of patoolib module after packaging
