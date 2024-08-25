@@ -7,6 +7,7 @@ import rarfile
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 from watchdog.events import FileSystemEventHandler
+from CWDHelper import getCWD
 
 def extract_rar(file_path, output_dir):
     try:
@@ -42,22 +43,22 @@ class FileMoveHandler(FileSystemEventHandler):
                     shutil.move(file_path, folder_path)
                     moved_file_path = os.path.join(folder_path, file_name+file_extension)
                     logging.info(f"<Moved File Path>: {moved_file_path}\n")
-                    # if file_extension == '.rar':
-                    #     try:
-                    #         # Open the rar file
-                    #         with rarfile.RarFile(file_path) as rf:
-                    #             # Extract all files
-                    #             rf.extractall(path=folder_path)
-                    #             logging.info(f"== Extracted {file_path} to {folder_path} ==")
+                    if file_extension == '.rar':
+                        try:
+                            # Open the rar file
+                            with rarfile.RarFile(moved_file_path) as rf:
+                                # Extract all files
+                                rf.extractall(path=folder_path)
+                                logging.info(f"== Extracted {moved_file_path} to {folder_path} ==")
 
-                    #     except rarfile.BadRarFile:
-                    #         logging.error(f"== File is not a valid RAR archive: {file_path} ==")
-                    #     except Exception as e:
-                    #         # Check if the exception is related to password protection
-                    #         if 'password' in str(e).lower():
-                    #             logging.warning(f"== Skipping {file_path}, password is required. {e} ==")
-                    #         else:
-                    #             logging.error(f"== Failed to extract {file_path}: {e} ==")
+                        except rarfile.BadRarFile:
+                            logging.error(f"== File is not a valid RAR archive: {moved_file_path} ==")
+                        except Exception as e:
+                            # Check if the exception is related to password protection
+                            if 'password' in str(e).lower():
+                                logging.warning(f"== Skipping {moved_file_path}, password is required. {e} ==")
+                            else:
+                                logging.error(f"== Failed to extract {moved_file_path}: {e} ==")
                     # elif file_extension == '.zip':
                     #     try:
                     #         patoolib.extract_archive(moved_file_path, outdir=folder_path)
@@ -66,13 +67,13 @@ class FileMoveHandler(FileSystemEventHandler):
                     #             logging.info(f"== Skipping extraction of {file_path}, password is required. ==")
                     #         else:
                     #             logging.info(f"== Failed to extract {file_path} due to an unexpected error: {e} ==")
-                    try:
-                        patoolib.extract_archive(moved_file_path, outdir=folder_path)
-                    except patoolib.util.PatoolError as e:
-                        if 'password' in str(e).lower():
-                            logging.info(f"== Skipping extraction of {file_path}, password is required. ==")
-                        else:
-                            logging.info(f"== Failed to extract {file_path} due to an unexpected error: {e} ==")
+                    # try:
+                    #     patoolib.extract_archive(moved_file_path, outdir=folder_path)
+                    # except patoolib.util.PatoolError as e:
+                    #     if 'password' in str(e).lower():
+                    #         logging.info(f"== Skipping extraction of {moved_file_path}, password is required. ==")
+                    #     else:
+                    #         logging.info(f"== Failed to extract {moved_file_path} due to an unexpected error: {e} ==")
 
 def main():
     # path = sys.argv[1] if len(sys.argv) > 1 else '.'
@@ -90,17 +91,7 @@ def main():
         log_observer.join()
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    # If the script is packaged (i.e., running as an .exe)
-    # folder_to_watch = os.path.dirname(sys.executable)
-    folder_to_watch = os.path.dirname(os.path.abspath(__file__))
-
-    # Change the current working directory to the script directory
-    os.chdir(folder_to_watch)
-    # folder_to_watch = os.path.dirname(os.path.abspath(__file__))
-    logging.debug(f'<Folder to Watch> : {folder_to_watch}')
+    folder_to_watch = getCWD()
     file_event_handler = FileMoveHandler()
     file_observer = Observer()
     file_observer.schedule(file_event_handler, folder_to_watch, recursive=False)
